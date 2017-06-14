@@ -1,0 +1,6 @@
+{
+  "name": "ether-transaction-builder",
+  "version": "1.0.0",
+  "description": "Offline tool for manually crafting an Ethereum transaction's data blob",
+  "author": "Brooks Boyd <bro@oks.me>"
+}

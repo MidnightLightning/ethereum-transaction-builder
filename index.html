@@ -1,0 +1,75 @@
+<!doctype>
+<html>
+<head>
+    <title>Ethereum Transaction Builder</title>
+    <script type="text/javascript" src="sha3.min.js"></script>
+    <script type="text/javascript" src="jquery-3.2.1.min.js"></script>
+    <style>
+        #abi { width: 100%; height: 300px; font-family:monospace; font-size:0.8rem; }
+        .tt { font-family:monospace; }
+    </style>
+</head>
+<body>
+<h2>Contract ABI:</h2>
+<textarea id="abi"></textarea>
+<button id="parseAbi">Parse</button>
+<div id="abiDetails" style="display:none">
+    <table class="zebra">
+        <thead>
+            <tr><th>Method</th><th>Selector</th><th>Hash</th></tr>
+        </thead>
+        <tbody>
+
+        </tbody>
+    </table>
+</div>
+
+<script type="text/javascript">
+  function getMethodSignature(methodAbi) {
+    methodAbi.signature = methodAbi.name + '(' + methodAbi.inputs.map(function(input) { return input.type; }).join(',') + ')';
+    methodAbi.fullName = methodAbi.name + '(' + methodAbi.inputs.map(function(input) { return input.type + ' ' + input.name; }).join(', ') + ')';
+    methodAbi.hash = keccak_256(methodAbi.signature);
+    methodAbi.selector = methodAbi.hash.slice(0,8);
+    return methodAbi;
+  }
+
+  function parseAbi() {
+    var abiRaw = $('#abi').val();
+    var abi;
+    try {
+      abi = JSON.parse(abiRaw);
+    } catch (e) {
+      console.error(e);
+      var message = (e.message == 'Unexpected end of JSON input')? 'Invalid JSON in ABI' : 'Error parsing ABI data';
+      alert(message);
+      return;
+    }
+
+    // Update details table
+    var $detailsTable = $('#abiDetails').show().find('tbody');
+    var methodDetails = {};
+    abi.map(function(method) {
+      if (method.type !== 'function') return;
+      method = getMethodSignature(method);
+      methodDetails[method.fullName] = method;
+    });
+    console.log(methodDetails);
+    Object.keys(methodDetails).sort().map(function(signature) {
+      var method = methodDetails[signature];
+      $detailsTable.append('<tr><td>' + method.fullName + '</td><td class="tt">' + method.selector + '</td><td class="tt">' + method.hash + '</td></tr>');
+    });
+  }
+  $('#parseAbi').on('click', parseAbi);
+
+  function getEventSignature(eventAbi) {
+    var signature = eventAbi.name + '(' + eventAbi.inputs.map(function(input) { return input.type; }).join(',') + ')';
+    var hash = keccak_256(signature);
+    return {
+      signature: signature,
+      hash: hash,
+      abi: eventAbi
+    };
+  }
+</script>
+</body>
+</html>
